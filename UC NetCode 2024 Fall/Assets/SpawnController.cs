@@ -22,8 +22,8 @@ public class SpawnController : NetworkBehaviour
         if (IsServer)
         {
             NetworkManager.Singleton.OnConnectionEvent += OnConnectionEvent;
+            _playerCount.OnValueChanged += PlayerCountChanged;
         }
-        _playerCount.OnValueChanged += PlayerCountChanged;
     }
 
     public override void OnNetworkDespawn()
@@ -32,8 +32,8 @@ public class SpawnController : NetworkBehaviour
         if (IsServer)
         {
             NetworkManager.Singleton.OnConnectionEvent -= OnConnectionEvent;
+            _playerCount.OnValueChanged -= PlayerCountChanged;
         }
-        _playerCount.OnValueChanged -= PlayerCountChanged;
     }
 
     private void PlayerCountChanged(int previousValue, int newValue)
@@ -54,15 +54,17 @@ public class SpawnController : NetworkBehaviour
     }
     private void OnConnectionEvent(NetworkManager netManager, ConnectionEventData eventData) 
     {
-       
-        if(eventData.EventType == ConnectionEvent.ClientConnected) 
+        if (IsServer)
+        {
+            if (eventData.EventType == ConnectionEvent.ClientConnected)
             {
-            _playerCount.Value++;
+                _playerCount.Value++;
             }
-        if(eventData.EventType == ConnectionEvent.ClientDisconnected) 
+            if (eventData.EventType == ConnectionEvent.ClientDisconnected)
             {
-            _playerCount.Value--; 
+                _playerCount.Value--;
             }
+        }
 
     }
 
@@ -75,8 +77,6 @@ public class SpawnController : NetworkBehaviour
         {
             NetworkObject spawnedPlayerNO = NetworkManager.Instantiate(_playerPrefab, _spawnPoints[spawnNum].position, _spawnPoints[spawnNum].rotation);
             spawnedPlayerNO.SpawnAsPlayerObject(clientId);
-            
-            
             spawnNum++;
         }
     }
